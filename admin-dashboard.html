@@ -235,11 +235,85 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', -appl
   .sidebar { display: none; }
   .main { padding: 16px; }
 }
+
+
+/* ── 관리자 로그인 오버레이 ── */
+.admin-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #111409;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.admin-overlay.hidden { display: none; }
+.admin-logo {
+  font-size: 2rem; font-weight: 900; letter-spacing: -1px;
+  background: linear-gradient(135deg, #d4c87a, #7d9448);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 4px;
+}
+.admin-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 32px; }
+.admin-login-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 28px 24px; width: 100%; max-width: 340px;
+}
+.admin-login-title { font-size: 0.95rem; font-weight: 700; color: var(--accent2); margin-bottom: 20px; text-align: center; }
+.al-group { margin-bottom: 14px; }
+.al-group label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 5px; }
+.al-group input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 13px; color: var(--text); font-size: 0.95rem;
+  outline: none; transition: border-color 0.2s;
+}
+.al-group input:focus { border-color: var(--accent); }
+.al-group input::placeholder { color: var(--muted); }
+.al-btn {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, #7d9448, #5a6e32);
+  border: none; border-radius: 11px; color: #fff;
+  font-size: 0.95rem; font-weight: 700; cursor: pointer; margin-top: 6px;
+  transition: opacity 0.2s;
+}
+.al-btn:active { opacity: 0.85; }
+.al-error { font-size: 0.76rem; color: #e07070; text-align: center; margin-top: 10px; min-height: 16px; }
+.al-setup-note { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.6; }
+.al-logout-wrap { position: fixed; top: 12px; right: 16px; z-index: 200; display: none; }
+.al-logout-btn {
+  font-size: 0.72rem; color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 99px; padding: 5px 12px; cursor: pointer;
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+
+<!-- 관리자 로그인 오버레이 -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-logo">AllDay PT</div>
+  <div class="admin-sub">관리자 전용</div>
+  <div class="admin-login-card">
+    <div class="admin-login-title" id="al-title">🔐 관리자 로그인</div>
+    <div class="al-group">
+      <label>이름</label>
+      <input type="text" id="al-name" placeholder="관리자 이름" maxlength="20"
+        onkeydown="if(event.key==='Enter') document.getElementById('al-phone').focus()">
+    </div>
+    <div class="al-group">
+      <label>전화번호</label>
+      <input type="tel" id="al-phone" placeholder="010-0000-0000" maxlength="13"
+        oninput="formatPhone(this)"
+        onkeydown="if(event.key==='Enter') adminLogin()">
+    </div>
+    <button class="al-btn" id="al-btn" onclick="adminLogin()">로그인</button>
+    <div class="al-error" id="al-error"></div>
+    <div class="al-setup-note" id="al-setup-note"></div>
+  </div>
+</div>
+
+<!-- 관리자 로그아웃 버튼 (로그인 후 표시) -->
+<div class="al-logout-wrap" id="al-logout-wrap">
+  <button class="al-logout-btn" onclick="adminLogout()">로그아웃</button>
+</div>
 
 <div class="top-nav">
   <div>
@@ -349,6 +423,83 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', -appl
 </div>
 
 <script>
+// ══════════════════════════════════════════════
+// 관리자 인증
+// ══════════════════════════════════════════════
+const ADMIN_CREDS_KEY = 'allday-admin-creds'; // { name, phone (hashed) }
+const ADMIN_SESSION_KEY = 'allday-admin-session';
+
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function formatPhone(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0,11);
+  if (v.length >= 8) v = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7);
+  else if (v.length >= 4) v = v.slice(0,3)+'-'+v.slice(3);
+  input.value = v;
+}
+
+function getAdminCreds() {
+  try { return JSON.parse(localStorage.getItem(ADMIN_CREDS_KEY) || 'null'); } catch(e) { return null; }
+}
+
+async function adminLogin() {
+  const name = document.getElementById('al-name').value.trim();
+  const phone = document.getElementById('al-phone').value.trim();
+  const errEl = document.getElementById('al-error');
+  errEl.textContent = '';
+
+  if (!name || !phone) { errEl.textContent = '이름과 전화번호를 모두 입력해주세요.'; return; }
+
+  const phoneHash = await hashStr(phone.replace(/\D/g,''));
+  const creds = getAdminCreds();
+
+  if (!creds) {
+    // 최초 등록
+    localStorage.setItem(ADMIN_CREDS_KEY, JSON.stringify({ name, phoneHash }));
+    localStorage.setItem(ADMIN_SESSION_KEY, '1');
+    showDashboard();
+  } else {
+    // 검증
+    if (creds.name === name && creds.phoneHash === phoneHash) {
+      localStorage.setItem(ADMIN_SESSION_KEY, '1');
+      showDashboard();
+    } else {
+      errEl.textContent = '이름 또는 전화번호가 맞지 않습니다.';
+    }
+  }
+}
+
+function adminLogout() {
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+  location.reload();
+}
+
+function showDashboard() {
+  document.getElementById('admin-overlay').classList.add('hidden');
+  document.getElementById('al-logout-wrap').style.display = 'block';
+  // Firebase 연동 시작
+  subscribeToFirebase();
+}
+
+function checkAdminSession() {
+  const creds = getAdminCreds();
+  const note = document.getElementById('al-setup-note');
+  if (!creds) {
+    document.getElementById('al-title').textContent = '🔐 관리자 계정 설정';
+    document.getElementById('al-btn').textContent = '계정 만들기';
+    note.textContent = '처음 사용하시면 이름과 전화번호를 입력해 관리자 계정을 만드세요.';
+  }
+  if (localStorage.getItem(ADMIN_SESSION_KEY)) {
+    showDashboard();
+  }
+}
+
+checkAdminSession();
+
 // ══════════════════════════════════════════════
 // Firebase 초기화
 // ══════════════════════════════════════════════
@@ -805,7 +956,7 @@ function switchView(view) {
 // Init
 // ══════════════════════════════════════════════
 renderAll();
-subscribeToFirebase(); // Firebase 실시간 연동 시작
+// subscribeToFirebase()는 관리자 로그인 성공 후 showDashboard()에서 호출됨
 </script>
 </body>
 </html>

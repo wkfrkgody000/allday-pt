@@ -159,6 +159,40 @@ input[type="range"]::-webkit-slider-thumb {
 .info-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 .info-hz { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
 .info-text { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+/* ── 모드 탭 ── */
+.mode-tabs {
+  display: flex; gap: 6px; margin-bottom: 16px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 5px;
+}
+.mode-tab {
+  flex: 1; padding: 9px 4px; border: none; border-radius: 10px;
+  background: transparent; color: var(--muted); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.mode-tab.active-workout { background: linear-gradient(135deg,#4a5c28,#7d9448); color: #fff; }
+.mode-tab.active-meditation { background: linear-gradient(135deg,#3d2d6e,#7b5fc7); color: #fff; }
+.mode-tab.active-sleep { background: linear-gradient(135deg,#1a2e4a,#3a6ea8); color: #fff; }
+
+/* ── 명상 카드 ── */
+.freq-card[data-sid="theta"]   { --freq-color:#9b8fc4; --freq-glow:rgba(155,143,196,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(155,143,196,0.12),transparent 60%); }
+.freq-card[data-sid="432"]     { --freq-color:#89c4a8; --freq-glow:rgba(137,196,168,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(137,196,168,0.12),transparent 60%); }
+.freq-card[data-sid="528"]     { --freq-color:#c8aa7a; --freq-glow:rgba(200,170,122,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(200,170,122,0.12),transparent 60%); }
+.freq-card[data-sid="pink"]    { --freq-color:#c489b4; --freq-glow:rgba(196,137,180,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(196,137,180,0.12),transparent 60%); }
+
+/* ── 수면 카드 ── */
+.freq-card[data-sid="delta"]   { --freq-color:#6b8fb4; --freq-glow:rgba(107,143,180,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(107,143,180,0.12),transparent 60%); }
+.freq-card[data-sid="brown"]   { --freq-color:#a4886b; --freq-glow:rgba(164,136,107,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(164,136,107,0.12),transparent 60%); }
+.freq-card[data-sid="white"]   { --freq-color:#a0a8b4; --freq-glow:rgba(160,168,180,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(160,168,180,0.12),transparent 60%); }
+.freq-card[data-sid="396"]     { --freq-color:#7b9b8a; --freq-glow:rgba(123,155,138,0.25); --glow:radial-gradient(circle at 50% 100%,rgba(123,155,138,0.12),transparent 60%); }
+
+.freq-card.active[data-sid] { border-color: var(--freq-color); box-shadow: 0 0 20px var(--freq-glow); }
+.freq-card.active[data-sid]::before { opacity: 1; }
+.freq-card.active[data-sid] .freq-toggle { background: var(--freq-color); border-color: var(--freq-color); color: #111; }
+
+.sound-section { display: none; }
+.sound-section.active { display: block; }
 </style>
 </head>
 <body>
@@ -187,7 +221,15 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <!-- Frequency cards -->
+  <!-- 모드 탭 -->
+  <div class="mode-tabs">
+    <button class="mode-tab active-workout" id="tab-workout" onclick="switchMode('workout')">🏋️ 운동</button>
+    <button class="mode-tab" id="tab-meditation" onclick="switchMode('meditation')">🧘 명상</button>
+    <button class="mode-tab" id="tab-sleep" onclick="switchMode('sleep')">💤 수면</button>
+  </div>
+
+  <!-- 운동 모드 -->
+  <div class="sound-section active" id="section-workout">
   <div class="freq-grid">
     <div class="freq-card" data-hz="20" onclick="toggleFreq(20)">
       <div class="freq-hz">20</div>
@@ -245,6 +287,121 @@ input[type="range"]::-webkit-slider-thumb {
       <button class="freq-toggle" id="btn-80">▶ 재생</button>
     </div>
   </div>
+  </div><!-- /section-workout -->
+
+  <!-- 명상 모드 -->
+  <div class="sound-section" id="section-meditation">
+  <div class="freq-grid">
+    <div class="freq-card" data-sid="theta" onclick="toggleSpecial('theta')">
+      <div class="freq-hz" style="color:var(--freq-color)">θ</div>
+      <div class="freq-unit">세타파 바이노럴</div>
+      <div class="freq-name">깊은 명상</div>
+      <div class="freq-effects">4Hz 바이노럴 비트<br>집중·창의성 향상<br>🎧 이어폰 필수</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-theta" min="0" max="100" value="60"
+          oninput="setSpecialVol('theta',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-theta">▶ 재생</button>
+    </div>
+
+    <div class="freq-card" data-sid="432" onclick="toggleSpecial('432')">
+      <div class="freq-hz" style="color:var(--freq-color)">432</div>
+      <div class="freq-unit">Hz</div>
+      <div class="freq-name">자연 음계</div>
+      <div class="freq-effects">자연 주파수 기반<br>긴장 해소 · 이완<br>편안한 집중 상태</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-432" min="0" max="100" value="60"
+          oninput="setSpecialVol('432',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-432">▶ 재생</button>
+    </div>
+
+    <div class="freq-card" data-sid="528" onclick="toggleSpecial('528')">
+      <div class="freq-hz" style="color:var(--freq-color)">528</div>
+      <div class="freq-unit">Hz</div>
+      <div class="freq-name">솔페지오 MI</div>
+      <div class="freq-effects">치유의 주파수<br>세포 회복 · 활성화<br>긍정 에너지 유도</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-528" min="0" max="100" value="60"
+          oninput="setSpecialVol('528',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-528">▶ 재생</button>
+    </div>
+
+    <div class="freq-card" data-sid="pink" onclick="toggleSpecial('pink')">
+      <div class="freq-hz" style="color:var(--freq-color)">𝄞</div>
+      <div class="freq-unit">핑크 노이즈</div>
+      <div class="freq-name">배경 앰비언트</div>
+      <div class="freq-effects">부드러운 배경 소음<br>잡생각 차단<br>명상 집중력 향상</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-pink" min="0" max="100" value="50"
+          oninput="setSpecialVol('pink',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-pink">▶ 재생</button>
+    </div>
+  </div>
+  </div><!-- /section-meditation -->
+
+  <!-- 수면 모드 -->
+  <div class="sound-section" id="section-sleep">
+  <div class="freq-grid">
+    <div class="freq-card" data-sid="delta" onclick="toggleSpecial('delta')">
+      <div class="freq-hz" style="color:var(--freq-color)">δ</div>
+      <div class="freq-unit">델타파 바이노럴</div>
+      <div class="freq-name">깊은 수면</div>
+      <div class="freq-effects">2Hz 바이노럴 비트<br>깊은 수면 유도<br>🎧 이어폰 필수</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-delta" min="0" max="100" value="55"
+          oninput="setSpecialVol('delta',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-delta">▶ 재생</button>
+    </div>
+
+    <div class="freq-card" data-sid="brown" onclick="toggleSpecial('brown')">
+      <div class="freq-hz" style="color:var(--freq-color)">𝄢</div>
+      <div class="freq-unit">브라운 노이즈</div>
+      <div class="freq-name">수면 마스킹</div>
+      <div class="freq-effects">저음 중심 깊은 노이즈<br>외부 소음 차단<br>숙면 & 집중 향상</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-brown" min="0" max="100" value="55"
+          oninput="setSpecialVol('brown',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-brown">▶ 재생</button>
+    </div>
+
+    <div class="freq-card" data-sid="white" onclick="toggleSpecial('white')">
+      <div class="freq-hz" style="color:var(--freq-color)">𝄠</div>
+      <div class="freq-unit">화이트 노이즈</div>
+      <div class="freq-name">소음 차단</div>
+      <div class="freq-effects">모든 주파수 균등 포함<br>아기 수면·집중 용도<br>외부 소음 완전 차단</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-white" min="0" max="100" value="45"
+          oninput="setSpecialVol('white',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-white">▶ 재생</button>
+    </div>
+
+    <div class="freq-card" data-sid="396" onclick="toggleSpecial('396')">
+      <div class="freq-hz" style="color:var(--freq-color)">396</div>
+      <div class="freq-unit">Hz</div>
+      <div class="freq-name">해방의 음파</div>
+      <div class="freq-effects">솔페지오 UT 주파수<br>공포·죄책감 해소<br>안정과 수면 전환</div>
+      <div style="margin-top:10px">
+        <input type="range" id="vol-396" min="0" max="100" value="55"
+          oninput="setSpecialVol('396',this.value);event.stopPropagation()"
+          onclick="event.stopPropagation()" style="width:100%">
+      </div>
+      <button class="freq-toggle" id="btn-396">▶ 재생</button>
+    </div>
+  </div>
+  </div><!-- /section-sleep -->
 
   <!-- Timer -->
   <div class="timer-card">
@@ -305,8 +462,11 @@ input[type="range"]::-webkit-slider-thumb {
       <div class="info-hz" style="color:#c47a50">80 Hz — 파워 베이스</div>
       <div class="info-text">80Hz는 강한 물리적 진동과 각성 효과를 제공합니다. 팔다리까지 진동이 전달되는 느낌을 주며, 최대 강도 리프팅(데드리프트, 스쿼트 1RM 시도 등)에 앞서 교감신경을 최대로 활성화할 때 사용하세요.</div>
     </div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-top:14px;padding:10px;background:var(--surface2);border-radius:10px">
-      💡 <b>화면이 꺼져도 소리가 계속 납니다.</b> 이어폰 사용 권장. 장시간 높은 볼륨은 청력에 영향을 줄 수 있으니 적정 볼륨을 유지하세요.
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:14px;padding:10px;background:var(--surface2);border-radius:10px;line-height:1.7">
+      🎧 <b>이어폰/헤드폰 사용 권장</b> — 저주파는 폰 스피커로 잘 안 들려요.<br>
+      🤖 <b>Android</b> — 화면이 꺼져도 백그라운드 재생 가능해요.<br>
+      🍎 <b>iPhone</b> — 화면이 꺼지면 소리가 끊겨요 (iOS 시스템 제한). 화면 켜둔 채 사용하세요.<br>
+      ⚠️ 장시간 높은 볼륨은 청력에 영향을 줄 수 있으니 적정 볼륨을 유지하세요.
     </div>
   </div>
 
@@ -322,7 +482,7 @@ let masterGain = null;
 let masterVolume = 0.5;
 let analyser = null;
 
-async function ensureAudio() {
+function initAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
@@ -332,10 +492,6 @@ async function ensureAudio() {
     masterGain.connect(analyser);
     analyser.connect(audioCtx.destination);
   }
-  if (audioCtx.state === 'suspended') {
-    await audioCtx.resume();
-  }
-  return audioCtx;
 }
 
 function createWarmOscillator(ctx, hz) {
@@ -359,23 +515,31 @@ function createWarmOscillator(ctx, hz) {
   return { oscs: [osc1, osc2, osc3], node: merger };
 }
 
-async function toggleFreq(hz) {
-  if (oscillators[hz] && oscillators[hz].active) {
-    stopFreq(hz);
+// 모바일 호환: 동기적으로 AudioContext 생성 후 resume().then() 패턴
+function toggleFreq(hz) {
+  initAudio(); // 동기적으로 생성 (유저 제스처 안에서)
+
+  const doToggle = () => {
+    if (oscillators[hz] && oscillators[hz].active) {
+      stopFreq(hz);
+    } else {
+      startFreq(hz);
+    }
+  };
+
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().then(doToggle);
   } else {
-    await startFreq(hz);
+    doToggle();
   }
 }
 
-async function startFreq(hz) {
-  const ctx = await ensureAudio(); // ← resume 완전히 기다림
+function startFreq(hz) {
   if (oscillators[hz] && oscillators[hz].active) return;
 
-  const { oscs, node } = createWarmOscillator(ctx, hz);
-  const gainNode = ctx.createGain();
+  const { oscs, node } = createWarmOscillator(audioCtx, hz);
+  const gainNode = audioCtx.createGain();
   const vol = parseInt(document.getElementById('vol-' + hz).value) / 100;
-
-  // 직접 볼륨 설정 (페이드 대신 즉시)
   gainNode.gain.value = vol * 0.7;
 
   node.connect(gainNode);
@@ -408,6 +572,7 @@ function setFreqVol(hz, val) {
     oscillators[hz].gainNode.gain.setTargetAtTime(val / 100 * 0.7, audioCtx.currentTime, 0.05);
   }
 }
+
 
 function setMasterVol(val) {
   masterVolume = val / 100;
@@ -622,14 +787,222 @@ document.addEventListener('visibilitychange', async () => {
   }
 });
 
-// 첫 상호작용 시 Wake Lock 요청 + AudioContext 준비
+// ══════════════════════════════════════════════
+// 백그라운드 오디오 유지 트릭
+// 무음 <audio> 루프로 오디오 세션을 살려둠 (Android 효과적)
+// ══════════════════════════════════════════════
+const silentAudio = document.createElement('audio');
+// 1초짜리 무음 WAV (base64)
+silentAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+silentAudio.loop = true;
+silentAudio.volume = 0.001; // 사실상 무음
+
+function startSilentAudio() {
+  silentAudio.play().catch(() => {});
+}
+
+// Media Session API — Android에서 백그라운드 오디오 허용
+if ('mediaSession' in navigator) {
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: '집중 사운드',
+    artist: 'AllDay PT',
+    album: '운동 집중 모드'
+  });
+  navigator.mediaSession.setActionHandler('play', () => {});
+  navigator.mediaSession.setActionHandler('pause', () => {});
+}
+
+// 첫 클릭 시 무음 오디오 + Wake Lock 시작
 document.body.addEventListener('click', () => {
+  startSilentAudio();
   requestWakeLock();
 }, { once: true });
 
 // 슬라이더 초기화 (30분)
 updateTimerDisplay();
 updateTimerArc();
+
+// ══════════════════════════════════════════════
+// 모드 전환
+// ══════════════════════════════════════════════
+let currentMode = 'workout';
+const modeTabClass = { workout:'active-workout', meditation:'active-meditation', sleep:'active-sleep' };
+
+function switchMode(mode) {
+  // 모든 사운드 정지
+  [20,40,60,80].forEach(hz => { if (oscillators[hz]?.active) stopFreq(hz); });
+  Object.keys(specialSounds).forEach(sid => { if (specialSounds[sid]?.active) stopSpecial(sid); });
+
+  currentMode = mode;
+  ['workout','meditation','sleep'].forEach(m => {
+    const tab = document.getElementById('tab-' + m);
+    const sec = document.getElementById('section-' + m);
+    tab.className = 'mode-tab' + (m === mode ? ' ' + modeTabClass[m] : '');
+    sec.className = 'sound-section' + (m === mode ? ' active' : '');
+  });
+
+  // MediaSession 업데이트
+  if ('mediaSession' in navigator) {
+    const labels = { workout:'운동 집중 모드', meditation:'명상 모드', sleep:'수면 모드' };
+    navigator.mediaSession.metadata = new MediaMetadata({ title:'집중 사운드', artist:'AllDay PT', album: labels[mode] });
+  }
+}
+
+// ══════════════════════════════════════════════
+// 특수 사운드 엔진 (노이즈 / 바이노럴 / 솔페지오)
+// ══════════════════════════════════════════════
+const specialSounds = {};
+
+// 핑크 노이즈 버퍼 생성
+function createPinkNoiseBuffer(ctx) {
+  const bufferSize = ctx.sampleRate * 3;
+  const buf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+  for (let i = 0; i < bufferSize; i++) {
+    const w = Math.random()*2-1;
+    b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+    b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+    b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+    data[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926;
+  }
+  return buf;
+}
+
+// 브라운 노이즈 버퍼 생성
+function createBrownNoiseBuffer(ctx) {
+  const bufferSize = ctx.sampleRate * 3;
+  const buf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < bufferSize; i++) {
+    const w = Math.random()*2-1;
+    data[i] = (last + 0.02*w) / 1.02;
+    last = data[i];
+    data[i] *= 3.5;
+  }
+  return buf;
+}
+
+// 화이트 노이즈 버퍼 생성
+function createWhiteNoiseBuffer(ctx) {
+  const bufferSize = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random()*2-1;
+  return buf;
+}
+
+// 바이노럴 비트: 좌우 채널에 다른 주파수 → 뇌가 차이를 비트로 인식
+function createBinauralBeat(ctx, baseHz, beatHz) {
+  const merger = ctx.createChannelMerger(2);
+  const oscL = ctx.createOscillator();
+  const oscR = ctx.createOscillator();
+  oscL.type = 'sine'; oscL.frequency.value = baseHz;
+  oscR.type = 'sine'; oscR.frequency.value = baseHz + beatHz;
+  const gL = ctx.createGain(); gL.gain.value = 0.8;
+  const gR = ctx.createGain(); gR.gain.value = 0.8;
+  oscL.connect(gL); gL.connect(merger, 0, 0);
+  oscR.connect(gR); gR.connect(merger, 0, 1);
+  return { oscs:[oscL,oscR], node:merger };
+}
+
+// 솔페지오/단순 사인파 (단음)
+function createSolfeggioTone(ctx, hz) {
+  const osc = ctx.createOscillator();
+  osc.type = 'sine'; osc.frequency.value = hz;
+  return { oscs:[osc], node:osc };
+}
+
+function startSpecial(sid) {
+  if (specialSounds[sid]?.active) return;
+  initAudio();
+
+  const doStart = () => {
+    const vol = parseInt(document.getElementById('vol-'+sid).value) / 100 * 0.6;
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = vol;
+    gainNode.connect(masterGain);
+
+    let sound;
+    if (sid === 'theta')  sound = createBinauralBeat(audioCtx, 200, 4);
+    else if (sid === 'delta') sound = createBinauralBeat(audioCtx, 100, 2);
+    else if (sid === '432')   sound = createSolfeggioTone(audioCtx, 432);
+    else if (sid === '528')   sound = createSolfeggioTone(audioCtx, 528);
+    else if (sid === '396')   sound = createSolfeggioTone(audioCtx, 396);
+    else if (sid === 'pink' || sid === 'brown' || sid === 'white') {
+      const buf = sid==='pink' ? createPinkNoiseBuffer(audioCtx)
+                : sid==='brown' ? createBrownNoiseBuffer(audioCtx)
+                : createWhiteNoiseBuffer(audioCtx);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      src.connect(gainNode);
+      src.start();
+      specialSounds[sid] = { type:'noise', src, gainNode, active:true };
+      updateSpecialUI(sid, true); updateStatusBadge();
+      return;
+    }
+
+    sound.node.connect(gainNode);
+    if (sound.oscs) sound.oscs.forEach(o => o.start());
+    specialSounds[sid] = { type:'tone', oscs:sound.oscs, node:sound.node, gainNode, active:true };
+    updateSpecialUI(sid, true);
+    updateStatusBadge();
+  };
+
+  if (audioCtx.state === 'suspended') audioCtx.resume().then(doStart);
+  else doStart();
+}
+
+function stopSpecial(sid) {
+  const s = specialSounds[sid];
+  if (!s?.active) return;
+  s.gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.2);
+  setTimeout(() => {
+    try { if (s.src) s.src.stop(); } catch(e){}
+    if (s.oscs) s.oscs.forEach(o => { try { o.stop(); } catch(e){} });
+    try { s.gainNode.disconnect(); } catch(e){}
+  }, 500);
+  s.active = false;
+  updateSpecialUI(sid, false);
+  updateStatusBadge();
+}
+
+function toggleSpecial(sid) {
+  initAudio();
+  const doToggle = () => {
+    if (specialSounds[sid]?.active) stopSpecial(sid);
+    else startSpecial(sid);
+  };
+  if (audioCtx.state === 'suspended') audioCtx.resume().then(doToggle);
+  else doToggle();
+}
+
+function setSpecialVol(sid, val) {
+  const s = specialSounds[sid];
+  if (s?.active && s.gainNode) {
+    s.gainNode.gain.setTargetAtTime(val/100*0.6, audioCtx.currentTime, 0.05);
+  }
+}
+
+function updateSpecialUI(sid, active) {
+  const card = document.querySelector(`.freq-card[data-sid="${sid}"]`);
+  const btn = document.getElementById('btn-'+sid);
+  if (card) card.classList.toggle('active', active);
+  if (btn) btn.textContent = active ? '■ 정지' : '▶ 재생';
+}
+
+// updateStatusBadge 오버라이드: 특수 사운드도 포함
+const _origUpdateStatusBadge = updateStatusBadge;
+updateStatusBadge = function() {
+  const wList = Object.entries(oscillators).filter(([,v])=>v.active).map(([hz])=>hz+'Hz');
+  const sList = Object.entries(specialSounds).filter(([,v])=>v.active).map(([sid])=>sid);
+  const all = [...wList, ...sList];
+  const badge = document.getElementById('status-badge');
+  const text = document.getElementById('status-text');
+  if (all.length===0) { badge.className='status-badge'; text.textContent='사운드 꺼짐'; }
+  else { badge.className='status-badge playing'; text.textContent=all.join(' + ')+' 재생 중'; }
+};
 </script>
 </body>
 </html>

@@ -562,13 +562,29 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ── 로그인 체크
+(function() {
+  try {
+    const u = JSON.parse(localStorage.getItem('allday-user') || 'null');
+    if (!u) location.replace('login.html?redirect=' + encodeURIComponent(location.pathname.split('/').pop()));
+  } catch(e) { location.replace('login.html'); }
+})();
+
 function getMemberId() {
+  try {
+    const u = JSON.parse(localStorage.getItem('allday-user') || 'null');
+    if (u && u.id) return u.id;
+  } catch(e) {}
+  // 폴백
   let id = localStorage.getItem('mt-member-id');
-  if (!id) {
-    id = 'member_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
-    localStorage.setItem('mt-member-id', id);
-  }
+  if (!id) { id = 'member_' + Date.now(); localStorage.setItem('mt-member-id', id); }
   return id;
+}
+function getMemberName() {
+  try {
+    const u = JSON.parse(localStorage.getItem('allday-user') || 'null');
+    return u ? u.name : null;
+  } catch(e) { return null; }
 }
 
 function setSyncStatus(status) {
@@ -582,7 +598,9 @@ function setSyncStatus(status) {
 
 async function syncDayToFirestore(date) {
   const s = getSettings();
-  if (!s.memberName) return; // 이름 설정 전에는 동기화 안함
+  const loginName = getMemberName();
+  if (!s.memberName && !loginName) return; // 이름 없으면 동기화 안함
+  if (!s.memberName && loginName) s.memberName = loginName;
   const memberId = getMemberId();
   const log = getDayLog(date);
   setSyncStatus('syncing');
@@ -618,6 +636,8 @@ async function syncDayToFirestore(date) {
 
 async function syncSettingsToFirestore() {
   const s = getSettings();
+  const loginName = getMemberName();
+  if (!s.memberName && loginName) s.memberName = loginName;
   if (!s.memberName) return;
   const memberId = getMemberId();
   try {

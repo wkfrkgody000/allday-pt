@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllDay PT — 로그인</title>
+<style>
+:root {
+  --bg: #111409;
+  --surface: #1c2114;
+  --surface2: #242c1a;
+  --border: #3e4d28;
+  --accent: #7d9448;
+  --accent2: #aab96a;
+  --text: #e8d8b0;
+  --muted: #8a8a68;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Segoe UI', -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.logo {
+  font-size: 2.2rem; font-weight: 900; letter-spacing: -1px;
+  background: linear-gradient(135deg, #d4c87a, #7d9448);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 6px; text-align: center;
+}
+.sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 40px; text-align: center; }
+
+.login-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 32px 28px; width: 100%; max-width: 360px;
+}
+.card-title { font-size: 1rem; font-weight: 700; margin-bottom: 24px; text-align: center; color: var(--accent2); }
+
+.input-group { margin-bottom: 14px; }
+.input-group label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+.input-group input {
+  width: 100%;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  color: var(--text); font-size: 1rem;
+  outline: none; transition: border-color 0.2s;
+}
+.input-group input:focus { border-color: var(--accent); }
+.input-group input::placeholder { color: var(--muted); }
+
+.login-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #7d9448, #5a6e32);
+  border: none; border-radius: 12px;
+  color: #fff; font-size: 1rem; font-weight: 700;
+  cursor: pointer; margin-top: 10px;
+  transition: opacity 0.2s;
+}
+.login-btn:active { opacity: 0.85; }
+
+.member-list { margin-top: 26px; }
+.member-list-title { font-size: 0.72rem; color: var(--muted); margin-bottom: 10px; text-align: center; }
+.member-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.member-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; padding: 6px 14px;
+  font-size: 0.82rem; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.member-chip:hover { border-color: var(--accent); color: var(--accent2); }
+
+.error-msg {
+  font-size: 0.78rem; color: #e07070;
+  text-align: center; margin-top: 10px; min-height: 18px;
+}
+</style>
+</head>
+<body>
+
+<div class="logo">AllDay PT</div>
+<div class="sub">피트니스 관리 시스템</div>
+
+<div class="login-card">
+  <div class="card-title">👤 로그인</div>
+
+  <div class="input-group">
+    <label>이름</label>
+    <input type="text" id="name-input" placeholder="이름을 입력하세요" maxlength="20"
+      oninput="clearError()"
+      onkeydown="if(event.key==='Enter') document.getElementById('phone-input').focus()">
+  </div>
+
+  <div class="input-group">
+    <label>전화번호</label>
+    <input type="tel" id="phone-input" placeholder="010-0000-0000" maxlength="13"
+      oninput="formatPhone(this); clearError()"
+      onkeydown="if(event.key==='Enter') doLogin()">
+  </div>
+
+  <button class="login-btn" onclick="doLogin()">시작하기</button>
+  <div class="error-msg" id="error-msg"></div>
+
+  <div class="member-list" id="member-list" style="display:none">
+    <div class="member-list-title">최근 로그인</div>
+    <div class="member-chips" id="member-chips"></div>
+  </div>
+</div>
+
+<script>
+function formatPhone(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  if (v.length >= 8) v = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7);
+  else if (v.length >= 4) v = v.slice(0,3)+'-'+v.slice(3);
+  input.value = v;
+}
+function clearError() { document.getElementById('error-msg').textContent = ''; }
+
+function getMembers() {
+  try { return JSON.parse(localStorage.getItem('allday-members') || '[]'); } catch(e) { return []; }
+}
+function saveMembers(list) { localStorage.setItem('allday-members', JSON.stringify(list)); }
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('allday-user') || 'null'); } catch(e) { return null; }
+}
+
+// 이미 로그인돼 있으면 바로 홈으로
+if (getUser()) {
+  location.replace(new URLSearchParams(location.search).get('redirect') || 'index.html');
+}
+
+// 최근 로그인 칩
+function renderChips() {
+  const members = getMembers();
+  const list = document.getElementById('member-list');
+  const chips = document.getElementById('member-chips');
+  if (members.length === 0) { list.style.display = 'none'; return; }
+  list.style.display = '';
+  chips.innerHTML = members.map(m =>
+    `<div class="member-chip" onclick="selectMember(${JSON.stringify(m.name)}, ${JSON.stringify(m.phone||'')})">
+      ${m.name}
+    </div>`
+  ).join('');
+}
+
+function selectMember(name, phone) {
+  document.getElementById('name-input').value = name;
+  document.getElementById('phone-input').value = phone;
+  clearError();
+}
+
+function phoneKey(phone) {
+  // 숫자만 추출해서 비교 키로 사용
+  return phone.replace(/\D/g, '');
+}
+
+function doLogin() {
+  const name = document.getElementById('name-input').value.trim();
+  const phone = document.getElementById('phone-input').value.trim();
+  const errEl = document.getElementById('error-msg');
+
+  if (!name) { errEl.textContent = '이름을 입력해주세요.'; return; }
+  if (phoneKey(phone).length < 10) { errEl.textContent = '전화번호를 올바르게 입력해주세요.'; return; }
+
+  let members = getMembers();
+  // 이름+전화번호 조합으로 식별
+  let member = members.find(m => m.name === name && phoneKey(m.phone||'') === phoneKey(phone));
+
+  if (!member) {
+    // 같은 이름 다른 번호인지 확인
+    const sameName = members.find(m => m.name === name);
+    if (sameName) {
+      errEl.textContent = '이름 또는 전화번호가 맞지 않습니다.';
+      return;
+    }
+    // 신규 회원
+    const id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    member = { name, phone, id };
+    members.unshift(member);
+    if (members.length > 30) members = members.slice(0, 30);
+    saveMembers(members);
+  } else {
+    members = [member, ...members.filter(m => !(m.name === name && phoneKey(m.phone||'') === phoneKey(phone)))];
+    saveMembers(members);
+  }
+
+  localStorage.setItem('allday-user', JSON.stringify(member));
+  location.replace(new URLSearchParams(location.search).get('redirect') || 'index.html');
+}
+
+renderChips();
+document.getElementById('name-input').focus();
+</script>
+</body>
+</html>
