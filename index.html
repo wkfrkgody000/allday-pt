@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllDay PT</title>
+<style>
+:root {
+  --bg: #111409;
+  --surface: #1c2114;
+  --surface2: #242c1a;
+  --border: #3e4d28;
+  --accent: #7d9448;
+  --accent2: #aab96a;
+  --text: #e8d8b0;
+  --muted: #8a8a68;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Segoe UI', -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.logo {
+  font-size: 2.4rem; font-weight: 900; letter-spacing: -1px;
+  background: linear-gradient(135deg, #d4c87a, #7d9448);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 6px; text-align: center;
+}
+.sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 40px; text-align: center; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 420px; }
+
+.app-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+  padding: 22px 18px; text-decoration: none; color: var(--text);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  transition: border-color 0.2s, transform 0.15s;
+  position: relative; overflow: hidden;
+}
+.app-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.app-card:active { transform: scale(0.97); }
+.app-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(125,148,72,0.06), transparent);
+  pointer-events: none;
+}
+.app-card.wide { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; }
+.app-icon { font-size: 2rem; line-height: 1; }
+.app-name { font-size: 0.95rem; font-weight: 700; }
+.app-desc { font-size: 0.75rem; color: var(--muted); line-height: 1.4; }
+.badge-admin {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 0.62rem; font-weight: 700; color: var(--accent2);
+  background: rgba(170,185,106,0.12); border: 1px solid rgba(170,185,106,0.3);
+  border-radius: 99px; padding: 2px 7px;
+}
+
+.footer { margin-top: 36px; font-size: 0.72rem; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="logo">AllDay PT</div>
+<div class="sub">피트니스 관리 시스템</div>
+
+<div class="grid">
+  <a class="app-card" href="tdee-calculator.html">
+    <div class="app-icon">🧮</div>
+    <div class="app-name">TDEE 계산기</div>
+    <div class="app-desc">맞춤 칼로리 & 매크로 계산</div>
+  </a>
+
+  <a class="app-card" href="macro-tracker.html">
+    <div class="app-icon">🥗</div>
+    <div class="app-name">식단 트래커</div>
+    <div class="app-desc">칼로리 & 매크로 일별 기록</div>
+  </a>
+
+  <a class="app-card" href="workout-tracker.html">
+    <div class="app-icon">💪</div>
+    <div class="app-name">운동 트래커</div>
+    <div class="app-desc">세트 / 반복 / 볼륨 기록</div>
+  </a>
+
+  <a class="app-card" href="diet-recommend.html">
+    <div class="app-icon">🍱</div>
+    <div class="app-name">식단 추천</div>
+    <div class="app-desc">목표별 맞춤 식단 플랜</div>
+  </a>
+
+  <a class="app-card" href="sound-focus.html">
+    <div class="app-icon">🎧</div>
+    <div class="app-name">집중 사운드</div>
+    <div class="app-desc">20–80Hz 주파수 사운드</div>
+  </a>
+
+  <a class="app-card" href="admin-dashboard.html">
+    <div class="app-icon">📊</div>
+    <div class="app-name">관리자</div>
+    <div class="app-desc">회원 실시간 데이터 조회</div>
+    <span class="badge-admin">관장님 전용</span>
+  </a>
+</div>
+
+<div class="footer">AllDay PT · Firebase 실시간 동기화</div>
+
+</body>
+</html>

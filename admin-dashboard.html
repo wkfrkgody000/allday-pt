@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏋️ AllDay PT 관리자</title>
+<style>
+:root {
+  --bg: #111409;
+  --surface: #1c2114;
+  --surface2: #242c1a;
+  --surface3: #2e3720;
+  --border: #3e4d28;
+  --accent: #7d9448;
+  --accent2: #aab96a;
+  --green: #6b9e4a;
+  --red: #c47a50;
+  --yellow: #c8a84a;
+  --blue: #7a9e8a;
+  --text: #e8d8b0;
+  --muted: #8a8a68;
+  --protein: #c47a50;
+  --carb: #7a9e8a;
+  --fat: #c8a84a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', -apple-system, sans-serif; min-height: 100vh; }
+
+.top-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(15,15,19,0.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-title {
+  font-size: 1.1rem; font-weight: 800;
+  background: linear-gradient(135deg, #d4c87a, #7d9448);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.nav-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+.layout { display: flex; min-height: calc(100vh - 57px); }
+
+/* Sidebar */
+.sidebar {
+  width: 260px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky; top: 57px; height: calc(100vh - 57px); overflow-y: auto;
+}
+.sidebar-section-title {
+  font-size: 0.68rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 0 16px; margin-bottom: 8px;
+}
+.sidebar-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; background: none; border: none;
+  color: var(--muted); cursor: pointer; font-size: 0.87rem;
+  padding: 10px 16px; text-align: left; transition: all 0.15s;
+  border-radius: 0;
+}
+.sidebar-btn:hover { background: var(--surface2); color: var(--text); }
+.sidebar-btn.active { background: rgba(124,106,247,0.12); color: var(--accent2); font-weight: 600; border-right: 3px solid var(--accent); }
+.sidebar-btn .sb-icon { font-size: 1rem; width: 20px; text-align: center; }
+.sidebar-divider { height: 1px; background: var(--border); margin: 12px 16px; }
+
+.member-list-sidebar { padding: 0 8px; }
+.member-item-sidebar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 10px; cursor: pointer;
+  transition: background 0.15s;
+}
+.member-item-sidebar:hover { background: var(--surface2); }
+.member-item-sidebar.active { background: rgba(124,106,247,0.1); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+}
+.mis-info { flex: 1; min-width: 0; }
+.mis-name { font-size: 0.83rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mis-days { font-size: 0.7rem; color: var(--muted); }
+.mis-badge { font-size: 0.68rem; padding: 1px 6px; border-radius: 10px; font-weight: 700; flex-shrink: 0; }
+
+/* Main content */
+.main { flex: 1; padding: 24px; overflow-x: hidden; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+.card-title { font-size: 0.72rem; font-weight: 600; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: 16px;
+  padding: 40px; text-align: center; cursor: pointer;
+  transition: all 0.2s;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(124,106,247,0.05); }
+.upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.upload-text { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.upload-sub { font-size: 0.8rem; color: var(--muted); }
+#file-input { display: none; }
+.upload-btn {
+  background: linear-gradient(135deg, #7d9448, #4a5c28);
+  border: none; border-radius: 10px; color: #fff; cursor: pointer;
+  font-size: 0.87rem; font-weight: 700; padding: 10px 20px; margin-top: 14px;
+}
+
+/* Stats grid */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px; text-align: center;
+}
+.stat-val { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
+
+/* Member detail */
+.page { display: none; }
+.page.show { display: block; }
+
+.member-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+}
+.member-avatar-lg {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; font-weight: 800;
+}
+.member-name-lg { font-size: 1.2rem; font-weight: 800; }
+.member-meta { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+.member-memo { font-size: 0.8rem; color: var(--accent2); margin-top: 4px; font-style: italic; }
+
+/* Goal progress */
+.goal-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.goal-chip {
+  flex: 1; min-width: 100px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; text-align: center;
+}
+.gc-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
+.gc-val { font-size: 1.1rem; font-weight: 700; }
+
+/* Achievement bar */
+.achieve-row { margin-bottom: 12px; }
+.achieve-header { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; }
+.achieve-track { height: 8px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.achieve-fill { height: 100%; border-radius: 99px; transition: width 0.4s; }
+
+/* Day log table */
+.day-table { width: 100%; border-collapse: collapse; }
+.day-table th {
+  background: var(--surface2); color: var(--muted);
+  font-size: 0.72rem; font-weight: 600; padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.day-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.83rem; }
+.day-table tr:last-child td { border-bottom: none; }
+.day-table tr:hover td { background: var(--surface2); }
+.td-date { font-weight: 600; }
+.td-kcal { font-weight: 700; color: var(--accent2); }
+.td-ok { color: var(--green); font-weight: 700; }
+.td-over { color: var(--red); font-weight: 700; }
+.td-low { color: var(--yellow); font-weight: 700; }
+.bar-mini { height: 5px; background: var(--surface3); border-radius: 99px; overflow: hidden; margin-top: 4px; width: 80px; }
+.bar-mini-fill { height: 100%; border-radius: 99px; }
+
+/* Back btn */
+.back-btn {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--muted); cursor: pointer; font-size: 0.83rem; font-weight: 600;
+  padding: 7px 14px; margin-bottom: 16px; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
+}
+.back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Weekly chart */
+.week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.week-day { text-align: center; }
+.week-bar-wrap { height: 80px; display: flex; align-items: flex-end; justify-content: center; }
+.week-bar { width: 20px; border-radius: 4px 4px 0 0; transition: height 0.4s; min-height: 2px; }
+.week-label { font-size: 0.65rem; color: var(--muted); margin-top: 4px; }
+.week-kcal { font-size: 0.65rem; font-weight: 600; margin-top: 2px; }
+
+/* Macro donut mini */
+.macro-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.macro-mini-card {
+  flex: 1; min-width: 80px;
+  background: var(--surface2); border-radius: 10px; padding: 10px; text-align: center;
+}
+.mmc-val { font-size: 1.1rem; font-weight: 700; }
+.mmc-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+/* Edit settings modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-title { font-size: 1rem; font-weight: 700; }
+.modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.4rem; }
+.modal-close:hover { color: var(--text); }
+.modal-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.modal-field label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+.modal-field input {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-size: 0.95rem; padding: 10px 14px; outline: none;
+}
+.modal-field input:focus { border-color: var(--accent); }
+.modal-save { width: 100%; background: linear-gradient(135deg, #7d9448, #4a5c28); border: none; border-radius: 12px; color: #fff; cursor: pointer; font-size: 0.95rem; font-weight: 700; padding: 13px; margin-top: 8px; }
+.modal-delete { width: 100%; background: rgba(248,113,113,0.1); border: 1px solid var(--red); border-radius: 12px; color: var(--red); cursor: pointer; font-size: 0.87rem; font-weight: 600; padding: 10px; margin-top: 8px; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-icon { font-size: 3rem; margin-bottom: 12px; }
+.empty-text { font-size: 0.95rem; }
+
+/* Tag */
+.tag { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+.tag-green { background: rgba(52,211,153,0.15); color: var(--green); }
+.tag-red { background: rgba(248,113,113,0.15); color: var(--red); }
+.tag-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+.fb-status { font-size: 0.78rem; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); }
+.fb-status.connected { color: var(--green); border-color: var(--green); background: rgba(107,158,74,0.1); }
+.fb-status.loading { color: var(--yellow); border-color: var(--yellow); }
+.fb-status.error { color: var(--red); border-color: var(--red); }
+
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .main { padding: 16px; }
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="top-nav">
+  <div>
+    <div class="nav-title">🏋️ AllDay PT 관리자</div>
+    <div class="nav-sub">회원 식단 & 매크로 실시간 관리</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="fb-status loading" id="fb-status">⏳ 연결 중…</span>
+    <button class="upload-btn" onclick="document.getElementById('file-input').click()" style="font-size:0.78rem;padding:7px 12px">+ JSON 가져오기</button>
+  </div>
+  <input type="file" id="file-input" accept=".json" multiple onchange="handleFileUpload(this.files)">
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-section-title" style="margin-bottom:12px">메뉴</div>
+    <button class="sidebar-btn active" onclick="switchView('overview')" id="sb-overview">
+      <span class="sb-icon">📊</span> 전체 현황
+    </button>
+    <button class="sidebar-btn" onclick="switchView('members')" id="sb-members">
+      <span class="sb-icon">👥</span> 회원 목록
+    </button>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-title">회원</div>
+    <div class="member-list-sidebar" id="sidebar-members"></div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Overview page -->
+    <div class="page show" id="page-overview">
+      <div id="overview-content">
+        <div class="card">
+          <div class="upload-zone" id="upload-zone"
+            ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)"
+            onclick="document.getElementById('file-input').click()">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">회원 데이터 파일을 불러오세요</div>
+            <div class="upload-sub">회원 앱에서 내보낸 JSON 파일을 여기에 드래그하거나 클릭해서 선택하세요</div>
+            <div class="upload-sub" style="margin-top:6px">여러 파일 동시 선택 가능</div>
+            <button class="upload-btn" style="pointer-events:none">파일 선택</button>
+          </div>
+        </div>
+        <div id="overview-stats" style="display:none">
+          <div class="stats-grid" id="stats-grid"></div>
+          <div class="card">
+            <div class="card-title">회원별 오늘 달성률</div>
+            <div id="member-achievement-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members list page -->
+    <div class="page" id="page-members">
+      <div class="card">
+        <div class="card-title">전체 회원</div>
+        <div id="members-grid"></div>
+      </div>
+    </div>
+
+    <!-- Member detail page -->
+    <div class="page" id="page-detail">
+      <button class="back-btn" onclick="goBack()">← 뒤로</button>
+      <div id="detail-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit member modal -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">회원 설정 수정</div>
+      <button class="modal-close" onclick="closeEdit()">×</button>
+    </div>
+    <div class="modal-field">
+      <label>이름</label>
+      <input type="text" id="edit-name">
+    </div>
+    <div class="modal-field">
+      <label>메모</label>
+      <input type="text" id="edit-memo">
+    </div>
+    <div class="modal-field">
+      <label>목표 칼로리 (kcal)</label>
+      <input type="number" id="edit-kcal">
+    </div>
+    <div class="modal-field">
+      <label>단백질 목표 (%)</label>
+      <input type="number" id="edit-p" min="10" max="60">
+    </div>
+    <div class="modal-field">
+      <label>탄수화물 목표 (%)</label>
+      <input type="number" id="edit-c" min="10" max="70">
+    </div>
+    <div class="modal-field">
+      <label>지방 목표 (%)</label>
+      <input type="number" id="edit-f" min="10" max="60">
+    </div>
+    <button class="modal-save" onclick="saveEdit()">저장</button>
+    <button class="modal-delete" onclick="deleteMember()">이 회원 삭제</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// Firebase 초기화
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyCuSOXNBb8DXavfGOODxCyaYEvQgj0kRFM",
+  authDomain: "allday-pt.firebaseapp.com",
+  projectId: "allday-pt",
+  storageBucket: "allday-pt.firebasestorage.app",
+  messagingSenderId: "82337265547",
+  appId: "1:82337265547:web:2b43cacce5fe8df607218e"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function setFbStatus(type, text) {
+  const el = document.getElementById('fb-status');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'fb-status ' + type;
+}
+
+// 실시간으로 모든 회원 데이터 구독
+function subscribeToFirebase() {
+  db.collection('members').onSnapshot(async snapshot => {
+    if (snapshot.empty) {
+      setFbStatus('connected', '✅ 연결됨 (회원 없음)');
+      renderAll();
+      return;
+    }
+    setFbStatus('loading', '🔄 데이터 로딩 중…');
+    try {
+      const fbMembers = [];
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+        // 최근 60일 로그 가져오기
+        const logsSnap = await db.collection('members').doc(doc.id)
+          .collection('logs').orderBy('date','desc').limit(60).get();
+        const logs = {};
+        logsSnap.forEach(ld => {
+          const d = ld.data();
+          if (d.date && d.items) logs[d.date] = d.items;
+        });
+        fbMembers.push({
+          id: doc.id,
+          name: data.name || '이름없음',
+          memo: data.memo || '',
+          settings: { kcal: data.kcal||2000, p: data.p||30, c: data.c||40, f: data.f||30 },
+          logs,
+          importedAt: data.lastSync?.toDate?.()?.toISOString() || new Date().toISOString(),
+          _fromFirebase: true
+        });
+      }
+      // Firebase 회원 + 로컬 JSON 임포트 회원 합치기
+      const localOnly = members.filter(m => !m._fromFirebase);
+      members = [...fbMembers, ...localOnly];
+      saveMembers();
+      renderAll();
+      setFbStatus('connected', `✅ ${fbMembers.length}명 실시간 연동`);
+    } catch(e) {
+      console.error('Firebase 로딩 오류:', e);
+      setFbStatus('error', '⚠️ 연결 오류');
+    }
+  }, err => {
+    console.error('Firebase 구독 오류:', err);
+    setFbStatus('error', '⚠️ 연결 실패');
+  });
+}
+
+// ══════════════════════════════════════════════
+// Data Store
+// ══════════════════════════════════════════════
+let members = JSON.parse(localStorage.getItem('admin-members') || '[]');
+let currentMemberIdx = null;
+let prevView = 'overview';
+
+function saveMembers() { localStorage.setItem('admin-members', JSON.stringify(members)); }
+
+const COLORS = ['#7c6af7','#34d399','#f87171','#60a5fa','#fbbf24','#f472b6','#a3e635','#fb923c'];
+function memberColor(i) { return COLORS[i % COLORS.length]; }
+function memberInitial(name) { return (name || '?').charAt(0).toUpperCase(); }
+
+// ══════════════════════════════════════════════
+// File upload
+// ══════════════════════════════════════════════
+function onDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('dragover'); }
+function onDragLeave(e) { document.getElementById('upload-zone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  handleFileUpload(e.dataTransfer.files);
+}
+
+function handleFileUpload(files) {
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        importMember(data);
+      } catch { alert(`파일 형식 오류: ${file.name}`); }
+    };
+    reader.readAsText(file);
+  });
+}
+
+function importMember(data) {
+  const name = data.member?.name || '이름없음';
+  // Check if exists (same name) → update
+  const existIdx = members.findIndex(m => m.name === name);
+  const memberData = {
+    name,
+    memo: data.member?.memo || '',
+    settings: data.settings || {kcal:2000, p:30, c:40, f:30},
+    logs: data.logs || {},
+    importedAt: data.exportedAt || new Date().toISOString()
+  };
+  if (existIdx >= 0) {
+    // Merge logs
+    members[existIdx].logs = {...members[existIdx].logs, ...memberData.logs};
+    members[existIdx].memo = memberData.memo;
+    members[existIdx].settings = memberData.settings;
+    members[existIdx].importedAt = memberData.importedAt;
+  } else {
+    members.push(memberData);
+  }
+  saveMembers();
+  renderAll();
+  alert(`✅ ${name} 회원 데이터 불러오기 완료!`);
+}
+
+// ══════════════════════════════════════════════
+// Helpers
+// ══════════════════════════════════════════════
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function getMemberTotals(m, date) {
+  const log = m.logs[date] || [];
+  return log.reduce((a,b) => ({kcal:a.kcal+b.kcal, p:a.p+b.p, c:a.c+b.c, f:a.f+b.f}), {kcal:0,p:0,c:0,f:0});
+}
+
+function getMemberGoals(m) {
+  const s = m.settings || {kcal:2000,p:30,c:40,f:30};
+  return {
+    kcal: s.kcal,
+    p: Math.round(s.kcal * s.p / 100 / 4),
+    c: Math.round(s.kcal * s.c / 100 / 4),
+    f: Math.round(s.kcal * s.f / 100 / 9),
+    pPct: s.p, cPct: s.c, fPct: s.f
+  };
+}
+
+function getLogDates(m) {
+  return Object.keys(m.logs || {}).filter(d => (m.logs[d]||[]).length > 0).sort((a,b)=>b.localeCompare(a));
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function achievementTag(pct) {
+  if (pct >= 90 && pct <= 115) return `<span class="tag tag-green">✓ 달성</span>`;
+  if (pct > 115) return `<span class="tag tag-red">초과</span>`;
+  return `<span class="tag tag-yellow">미달</span>`;
+}
+
+// ══════════════════════════════════════════════
+// Render All
+// ══════════════════════════════════════════════
+function renderAll() {
+  renderSidebar();
+  renderOverview();
+  renderMembersGrid();
+}
+
+function renderSidebar() {
+  const el = document.getElementById('sidebar-members');
+  if (members.length === 0) { el.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);padding:0 10px">아직 회원이 없어요</div>'; return; }
+  el.innerHTML = members.map((m, i) => {
+    const today = getMemberTotals(m, todayStr());
+    const goals = getMemberGoals(m);
+    const pct = goals.kcal > 0 ? Math.round(today.kcal / goals.kcal * 100) : 0;
+    const cls = pct >= 90 && pct <= 115 ? 'tag-green' : pct > 115 ? 'tag-red' : 'tag-yellow';
+    return `<div class="member-item-sidebar ${currentMemberIdx===i?'active':''}" onclick="openMember(${i})">
+      <div class="avatar" style="background:${memberColor(i)}20;color:${memberColor(i)}">${memberInitial(m.name)}</div>
+      <div class="mis-info">
+        <div class="mis-name">${esc(m.name)}</div>
+        <div class="mis-days">${getLogDates(m).length}일 기록</div>
+      </div>
+      <div class="mis-badge tag ${cls}">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderOverview() {
+  if (members.length === 0) { document.getElementById('overview-stats').style.display='none'; return; }
+  document.getElementById('overview-stats').style.display='';
+  const today = todayStr();
+
+  const activeTodayCount = members.filter(m => (m.logs[today]||[]).length > 0).length;
+  const avgPct = members.length > 0 ? Math.round(members.reduce((sum,m) => {
+    const t = getMemberTotals(m, today);
+    const g = getMemberGoals(m);
+    return sum + (g.kcal > 0 ? t.kcal / g.kcal * 100 : 0);
+  }, 0) / members.length) : 0;
+  const totalLogDays = members.reduce((s,m) => s + getLogDates(m).length, 0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent2)">${members.length}</div>
+      <div class="stat-label">전체 회원</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--green)">${activeTodayCount}</div>
+      <div class="stat-label">오늘 기록한 회원</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--yellow)">${avgPct}%</div>
+      <div class="stat-label">오늘 평균 달성률</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--blue)">${totalLogDays}</div>
+      <div class="stat-label">총 기록일 합산</div>
+    </div>
+  `;
+
+  // Achievement list
+  document.getElementById('member-achievement-list').innerHTML = members.map((m,i) => {
+    const t = getMemberTotals(m, today);
+    const g = getMemberGoals(m);
+    const pct = g.kcal > 0 ? Math.round(t.kcal / g.kcal * 100) : 0;
+    const fillColor = pct >= 90 && pct <= 115 ? 'var(--green)' : pct > 115 ? 'var(--red)' : 'var(--yellow)';
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;cursor:pointer" onclick="openMember(${i})">
+      <div class="avatar" style="background:${memberColor(i)}20;color:${memberColor(i)};width:36px;height:36px;font-size:0.85rem">${memberInitial(m.name)}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;font-size:0.83rem;margin-bottom:4px">
+          <span style="font-weight:600">${esc(m.name)}</span>
+          <span style="color:var(--muted);font-size:0.75rem">${Math.round(t.kcal)} / ${g.kcal} kcal</span>
+        </div>
+        <div style="height:7px;background:var(--surface2);border-radius:99px;overflow:hidden">
+          <div style="height:100%;width:${Math.min(pct,100)}%;background:${fillColor};border-radius:99px;transition:width 0.4s"></div>
+        </div>
+      </div>
+      <div style="font-size:0.85rem;font-weight:700;color:${fillColor};min-width:36px;text-align:right">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMembersGrid() {
+  const el = document.getElementById('members-grid');
+  if (members.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">아직 회원이 없어요.<br>상단의 [회원 데이터 불러오기]로 추가하세요.</div></div>';
+    return;
+  }
+  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">` +
+  members.map((m,i) => {
+    const dates = getLogDates(m);
+    const g = getMemberGoals(m);
+    const avgKcal = dates.length > 0 ? Math.round(dates.slice(0,7).reduce((s,d) => s + getMemberTotals(m,d).kcal, 0) / Math.min(dates.length,7)) : 0;
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:border-color 0.15s" onclick="openMember(${i})" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="avatar" style="width:44px;height:44px;font-size:1rem;background:${memberColor(i)}20;color:${memberColor(i)}">${memberInitial(m.name)}</div>
+        <div>
+          <div style="font-weight:700;font-size:0.95rem">${esc(m.name)}</div>
+          <div style="font-size:0.72rem;color:var(--muted)">${dates.length}일 기록</div>
+        </div>
+      </div>
+      ${m.memo ? `<div style="font-size:0.75rem;color:var(--accent2);margin-bottom:8px;font-style:italic">${esc(m.memo)}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted);margin-bottom:4px">
+        <span>목표</span><span style="color:var(--text);font-weight:600">${g.kcal} kcal</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted)">
+        <span>평균(7일)</span><span style="color:var(--accent2);font-weight:600">${avgKcal} kcal</span>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ══════════════════════════════════════════════
+// Member detail
+// ══════════════════════════════════════════════
+function openMember(idx) {
+  currentMemberIdx = idx;
+  renderSidebar();
+  const m = members[idx];
+  const g = getMemberGoals(m);
+  const dates = getLogDates(m);
+  const color = memberColor(idx);
+
+  // Weekly data (last 7 days)
+  const last7 = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().slice(0,10);
+    const t = getMemberTotals(m, ds);
+    last7.push({date:ds, day:['일','월','화','수','목','금','토'][d.getDay()], kcal:t.kcal, p:t.p, c:t.c, f:t.f});
+  }
+  const maxKcal = Math.max(...last7.map(d=>d.kcal), g.kcal, 1);
+
+  // All days table
+  const allDays = dates.slice(0,30);
+  const avgKcal = allDays.length > 0 ? Math.round(allDays.reduce((s,d)=>s+getMemberTotals(m,d).kcal,0)/allDays.length) : 0;
+  const achieveDays = allDays.filter(d => {
+    const t = getMemberTotals(m,d);
+    const pct = g.kcal>0 ? t.kcal/g.kcal*100 : 0;
+    return pct>=90 && pct<=115;
+  }).length;
+
+  document.getElementById('detail-content').innerHTML = `
+    <!-- Header -->
+    <div class="member-header">
+      <div class="member-avatar-lg" style="background:${color}20;color:${color}">${memberInitial(m.name)}</div>
+      <div>
+        <div class="member-name-lg">${esc(m.name)}</div>
+        <div class="member-meta">기록 ${dates.length}일 · 마지막 가져오기 ${m.importedAt ? m.importedAt.slice(0,10) : '–'}</div>
+        ${m.memo ? `<div class="member-memo">${esc(m.memo)}</div>` : ''}
+      </div>
+      <button style="margin-left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--muted);cursor:pointer;padding:8px 14px;font-size:0.82rem" onclick="openEdit(${idx})">✏️ 설정 수정</button>
+    </div>
+
+    <!-- Goals -->
+    <div class="card">
+      <div class="card-title">목표 설정</div>
+      <div class="goal-row">
+        <div class="goal-chip"><div class="gc-label">칼로리 목표</div><div class="gc-val" style="color:var(--accent2)">${g.kcal} kcal</div></div>
+        <div class="goal-chip"><div class="gc-label">단백질 목표</div><div class="gc-val" style="color:var(--protein)">${g.p}g (${m.settings?.p||30}%)</div></div>
+        <div class="goal-chip"><div class="gc-label">탄수화물 목표</div><div class="gc-val" style="color:var(--carb)">${g.c}g (${m.settings?.c||40}%)</div></div>
+        <div class="goal-chip"><div class="gc-label">지방 목표</div><div class="gc-val" style="color:var(--fat)">${g.f}g (${m.settings?.f||30}%)</div></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:var(--accent2)">${avgKcal}</div><div class="stat-label">평균 섭취 kcal</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${achieveDays}/${allDays.length}</div><div class="stat-label">목표 달성일</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--yellow)">${allDays.length>0?Math.round(achieveDays/allDays.length*100):0}%</div><div class="stat-label">달성률</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--blue)">${dates.length}</div><div class="stat-label">총 기록일</div></div>
+    </div>
+
+    <!-- Weekly chart -->
+    <div class="card">
+      <div class="card-title">최근 7일 칼로리</div>
+      <div class="week-grid">
+        ${last7.map(d => {
+          const h = d.kcal > 0 ? Math.round(d.kcal / maxKcal * 72) : 2;
+          const barColor = d.kcal === 0 ? 'var(--surface3)' : d.kcal/g.kcal >= 0.9 && d.kcal/g.kcal <= 1.15 ? 'var(--green)' : d.kcal/g.kcal > 1.15 ? 'var(--red)' : 'var(--yellow)';
+          return `<div class="week-day">
+            <div class="week-bar-wrap"><div class="week-bar" style="height:${h}px;background:${barColor}"></div></div>
+            <div class="week-label">${d.day}</div>
+            <div class="week-kcal" style="color:${d.kcal>0?'var(--text)':'var(--muted)'}">${d.kcal>0?Math.round(d.kcal):'-'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:12px;margin-top:12px;font-size:0.72rem;color:var(--muted)">
+        <span>⬛ 미기록</span>
+        <span style="color:var(--green)">■ 달성</span>
+        <span style="color:var(--yellow)">■ 미달</span>
+        <span style="color:var(--red)">■ 초과</span>
+        <span style="border-top:2px dashed var(--muted);padding-top:2px">— 목표 ${g.kcal}kcal</span>
+      </div>
+    </div>
+
+    <!-- Day log table -->
+    <div class="card">
+      <div class="card-title">날짜별 기록 (최근 30일)</div>
+      ${allDays.length === 0
+        ? '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">기록이 없어요</div></div>'
+        : `<div style="overflow-x:auto"><table class="day-table">
+        <thead><tr>
+          <th>날짜</th><th>칼로리</th><th>달성</th><th>단백질</th><th>탄수화물</th><th>지방</th>
+        </tr></thead>
+        <tbody>
+          ${allDays.map(date => {
+            const t = getMemberTotals(m, date);
+            const pct = g.kcal>0 ? Math.round(t.kcal/g.kcal*100) : 0;
+            const cls = pct>=90&&pct<=115?'td-ok':pct>115?'td-over':'td-low';
+            return `<tr>
+              <td class="td-date">${date}</td>
+              <td class="td-kcal">${Math.round(t.kcal)}</td>
+              <td class="${cls}">${pct}%</td>
+              <td>${t.p.toFixed(1)}g <span style="color:var(--muted);font-size:0.72rem">(${g.p}g)</span></td>
+              <td>${t.c.toFixed(1)}g <span style="color:var(--muted);font-size:0.72rem">(${g.c}g)</span></td>
+              <td>${t.f.toFixed(1)}g <span style="color:var(--muted);font-size:0.72rem">(${g.f}g)</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>`}
+    </div>
+  `;
+
+  switchView('detail');
+}
+
+function goBack() {
+  currentMemberIdx = null;
+  renderSidebar();
+  switchView(prevView === 'detail' ? 'overview' : prevView);
+}
+
+// ══════════════════════════════════════════════
+// Edit member
+// ══════════════════════════════════════════════
+function openEdit(idx) {
+  const m = members[idx];
+  document.getElementById('edit-name').value = m.name || '';
+  document.getElementById('edit-memo').value = m.memo || '';
+  document.getElementById('edit-kcal').value = m.settings?.kcal || 2000;
+  document.getElementById('edit-p').value = m.settings?.p || 30;
+  document.getElementById('edit-c').value = m.settings?.c || 40;
+  document.getElementById('edit-f').value = m.settings?.f || 30;
+  document.getElementById('edit-modal').classList.add('show');
+}
+function closeEdit() { document.getElementById('edit-modal').classList.remove('show'); }
+function closeEditOutside(e) { if (e.target === document.getElementById('edit-modal')) closeEdit(); }
+
+function saveEdit() {
+  if (currentMemberIdx === null) return;
+  const m = members[currentMemberIdx];
+  const p = parseInt(document.getElementById('edit-p').value);
+  const c = parseInt(document.getElementById('edit-c').value);
+  const f = parseInt(document.getElementById('edit-f').value);
+  if (p+c+f !== 100) { alert('매크로 합이 100%여야 해요!'); return; }
+  m.name = document.getElementById('edit-name').value.trim() || m.name;
+  m.memo = document.getElementById('edit-memo').value.trim();
+  m.settings = { kcal: parseInt(document.getElementById('edit-kcal').value)||2000, p, c, f };
+  saveMembers();
+  closeEdit();
+  openMember(currentMemberIdx);
+  renderAll();
+}
+
+function deleteMember() {
+  if (currentMemberIdx === null) return;
+  const name = members[currentMemberIdx].name;
+  if (!confirm(`"${name}" 회원을 삭제할까요?`)) return;
+  members.splice(currentMemberIdx, 1);
+  saveMembers();
+  closeEdit();
+  currentMemberIdx = null;
+  switchView('overview');
+  renderAll();
+}
+
+// ══════════════════════════════════════════════
+// View switching
+// ══════════════════════════════════════════════
+function switchView(view) {
+  if (view !== 'detail') prevView = view;
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('show'));
+  document.getElementById('page-' + view).classList.add('show');
+  document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
+  if (view === 'overview' || view === 'detail') document.getElementById('sb-overview')?.classList.add('active');
+  if (view === 'members') document.getElementById('sb-members')?.classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// Init
+// ══════════════════════════════════════════════
+renderAll();
+subscribeToFirebase(); // Firebase 실시간 연동 시작
+</script>
+</body>
+</html>
